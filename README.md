@@ -5,8 +5,9 @@
 Hello, here you will find two datasets for the **Sentence Compression** (SC) task focused on the Portuguese language based on the deletion approach.
 
 For instance: 
-    - ``ìnput``: Olá, aqui você encontrará datasets para projetos de SC em Português. 
-    - ``output``: aqui você encontrará datasets para SC em Português.
+
+- ``input``: Olá, aqui você encontrará datasets para projetos de SC em Português. 
+- ``output``: aqui você encontrará datasets para SC em Português.
 
 This repository is organized as follow:
 
