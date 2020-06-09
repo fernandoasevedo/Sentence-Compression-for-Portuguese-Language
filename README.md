@@ -41,7 +41,7 @@ Please, set the correctly configuration of keras for your machine.
 
 The code assumes one sentece per line
 
-## To predict with manul input
+## To predict/test with manual input
 
 	source virt_env/bin/activate
 	python src/fit.py
