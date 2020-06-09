@@ -18,4 +18,32 @@ This repository is organized as follow:
 		2. ``data.csv``: It is a tsv file with the data above organized into tokens. Each row has a single token with respective label (must be removed or not from the input sentence?) and some linguistic features that were extracted previously.
 	-  ``G1-Pares``: has 7,024 pairs of long and reduced sentences. These sentences were alignment based on the approach of [Filippova (2015)](https://www.aclweb.org/anthology/D15-1042/) from 1.008.356 news that were automatically crawled from [G1 news portal](\url{http://www.g1.com.br)
 
+## How to use it
+
+### Install
+
+	virtualenv --python python3 virt_env/
+	source virt_env/bin/activate
+	pip install requirements.txt
+	python -m nltk.downloader punkt
+
+Please, set the correctly configuration of keras for your machine.
+
+### To fit the model
+
+	source virt_env/bin/activate
+	python src/fit.py
+
+### To predict from a file
+
+	source virt_env/bin/activate
+	python src/fit.py <path for your file>
+
+The code assumes one sentece per line
+
+## To predict with manul input
+
+	source virt_env/bin/activate
+	python src/fit.py
+
    
