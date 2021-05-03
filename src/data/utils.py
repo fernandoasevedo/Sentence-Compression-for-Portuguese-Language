@@ -1,15 +1,37 @@
 from nltk.tokenize import wordpunct_tokenize
+import logging
 
 
-def log(message):
-    print(message)
+class Tokenizer(object):
+    
+    def __init__(self, name=None, doLower=True):
+        self.name = 'Tokenizer' if name is None else name
+        self.doLower = doLower
+
+        logMessage('Tokenizer %s was crated doLower=%s' % (
+            self.name, self.doLower))
+ 
+    def tokenize(self, sentence):
+        return self.simpleNorm(sentence).split()
+    
+    def simpleNorm(self, sentence):
+        _sentence = sentence.strip()
+        if self.doLower:
+            return _sentence.lower()
+        return _sentence
 
 
-def normalize_sent(sent, stemmer=False):
-    tokens = wordpunct_tokenize(sent)
-    tokens = [t.lower() for t in tokens]
+class DefaultTokenizer(Tokenizer):
 
-    return tokens
+    def __init__(self):
+        Tokenizer.__init__(self, 'default_tokenizer')
+    
+    def tokenize(self, sentence):
+        return wordpunct_tokenize(self.simpleNorm(sentence))
+
+
+def logMessage(message:str):
+    logging.info(message)
 
 
 def build_label(original, reduced):
