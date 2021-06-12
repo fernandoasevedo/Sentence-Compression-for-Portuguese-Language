@@ -1,21 +1,22 @@
 from keras.utils import Sequence
+from data.utils import logMessage
+from data.utils import buildVocab
+from model.constants import DEFAULT_TOKENS
+from model.constants import EOS
+from model.constants import BOS
+from model.constants import UNKNOWN_TOKEN
 from model.lstm_model import init_model
+
 import numpy as np
 import pickle
 
 
-def log(message):
-    print(message)
-
-
 class DataGenerator(Sequence):
 
-    def __init__(self, size, data, batch_size):
-        self.size = size
+    def __init__(self, data, batch_size, vectorizer):
         self.data = data
         self.batch_size = batch_size
-        self.__build_vocab()
-        self.vec = Vectorizer(self.vocab, size)
+        self.vectorizer = vectorizer
     
     def __len__(self):
         '''Returns number of batches from data'''
@@ -26,76 +27,63 @@ class DataGenerator(Sequence):
         bsize = self.batch_size
         X = np.array(
             self.data.sent.iloc[idx*bsize: (idx+1)*bsize] \
-                .map(self.vec.vectorize))
+                .map(self.vectorizer.vectorize))
 
         Y = self.data.labels.iloc[idx*bsize: (idx+1)*bsize] \
-                .map(self.vec.label_vector)
+                .map(self.vectorizer.vectorizerLabel)
         Y = np.array([[l for l in row] for row in Y])
+
         return np.array([row for row in X]), Y
 
-    def __build_vocab(self):
-        self.vocab = dict()
-        self.vocab['<eos>'] = 1
-        self.vocab['<sta>'] = 2
-        self.vocab['<unk>'] = 3
-        for sent in self.data.sent:
-            for t in sent:
-                self.vocab[t] = self.vocab.get(
-                    t,
-                    len(self.vocab) + 1)
 
 class Vectorizer(object):
 
     def __init__(self, vocab, max_size=20):
-        self.eos = '<eos>'
-        self.start = '<sta>'
-        self.unkown = '<unk>'
         self.max_size = max_size
         self.vocab = vocab
         self.padding = 0
-        self.N = len(self.vocab) + 1
     
     def vectorize(self, sent):
         sent = sent[:self.max_size - 1]
-        sent.append('<eos>')
-        unk = self.vocab[self.unkown]
-        '''
-        encoded = np.zeros((self.max_size, self.N), dtype=np.bool)
+        sent.append(EOS)
+        encoded = np.zeros(self.max_size, dtype=np.int)
         for i, t in enumerate(sent):
-            idx = self.vocab.get(t, unk)
-            encoded[i][idx] = 1
-        '''
-        encoded = np.zeros((self.max_size, 1), dtype=np.int)
-        for i, t in enumerate(sent):
-            encoded[i][0] = self.vocab.get(t, unk)
+            encoded[i] = self.vocab.get(t, UNKNOWN_TOKEN)
         return encoded
 
-    def label_vector(self, labels):
-        vec_labels = [[0] for _ in range(self.max_size)]
+    def vectorizerLabel(self, labels):
+        vec_labels = [0 for _ in range(self.max_size)]
         for i, l in enumerate(labels[:self.max_size]):
-            vec_labels[i][0] = l
+            vec_labels[i] = l
         return vec_labels
 
 
-def fit_model(data):
-    size = 20
-    data_reader = DataGenerator(size, data, 10)    
-    log('Building data vectors')    
-    model = init_model(size, len(data_reader.vocab) + 1)
-    log(model.summary())
+def fit_model(data, sent_size=20, batch_size=10):
+    
+    vocab = buildVocab(data.sent)
+
+    vectorizer = Vectorizer(vocab, sent_size)
+
+    data_reader = DataGenerator(data, batch_size, vectorizer)
+
+
+    logMessage('Building data vectors')
+    model = init_model(sent_size, len(vocab))
+    logMessage(model.summary())
+
     model.fit_generator(
         generator=data_reader,
-        epochs=10,
+        epochs=3,
         verbose=1)
 
-    log('Saving model')
+    logMessage('Saving model')
     model_json = model.to_json()
     with open("data/models/model.json", "w") as json_file:
         json_file.write(model_json)
-    log('Saving model weights')
+    logMessage('Saving model weights')
     # serialize weights to HDF5
     model.save_weights("data/models/model.h5")
 
-    log('Saving vectorizer')
+    logMessage('Saving vectorizer')
     with open('data/models/vec.pk', 'bw') as writer:
         pickle.dump(data_reader.vec, writer)
